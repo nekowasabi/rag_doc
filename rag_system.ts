@@ -72,8 +72,9 @@ export class RAGSystem {
     const embeddingBlob = new Uint8Array(embedding.buffer);
     
     const results = this.db.prepare(`
-      SELECT d.id, d.content, vss_distance(d.embedding, ?) as distance
-      FROM documents d
+      SELECT id, content, distance
+      FROM documents_vss
+      WHERE vss_search(embedding, ?)
       ORDER BY distance ASC
       LIMIT ?
     `).all([embeddingBlob, limit]);
