@@ -4,7 +4,7 @@ export async function initDatabase(dbPath: string): Promise<Database> {
   const db = new Database(dbPath);
   
   
-  db.execute(`
+  db.query(`
     CREATE TABLE IF NOT EXISTS documents (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       content TEXT NOT NULL,
@@ -13,7 +13,7 @@ export async function initDatabase(dbPath: string): Promise<Database> {
     );
   `);
   
-  db.execute(`
+  db.query(`
     CREATE INDEX IF NOT EXISTS idx_documents_id ON documents(id);
   `);
   
