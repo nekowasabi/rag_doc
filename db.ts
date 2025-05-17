@@ -1,12 +1,9 @@
-import { Database, sqlite_vss } from "./deps.ts";
+import { Database } from "./deps.ts";
 
 export async function initDatabase(dbPath: string): Promise<Database> {
   const db = new Database(dbPath);
   
-  db.enableLoadExtension = true;
-  await sqlite_vss.load(db);
-  
-  db.execute(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS documents (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       content TEXT NOT NULL,
@@ -15,13 +12,24 @@ export async function initDatabase(dbPath: string): Promise<Database> {
     );
   `);
   
-  db.execute(`
-    CREATE VIRTUAL TABLE IF NOT EXISTS documents_vss USING vss0(
-      embedding(1536),
-      id INT,
-      content TEXT
-    );
-  `);
+  db.function("cosine_similarity", (embeddingA, embeddingB) => {
+    const a = new Float32Array(embeddingA.buffer);
+    const b = new Float32Array(embeddingB.buffer);
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < a.length; i++) {
+      dotProduct += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+    
+    const similarity = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    
+    return 1 - similarity;
+  });
   
   return db;
 }
