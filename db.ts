@@ -12,7 +12,7 @@ export async function initDatabase(dbPath: string): Promise<Database> {
     );
   `);
   
-  db.create_function("cosine_similarity", (embeddingA, embeddingB) => {
+  db.function("cosine_similarity", (embeddingA, embeddingB) => {
     const a = new Float32Array(embeddingA.buffer);
     const b = new Float32Array(embeddingB.buffer);
     
