@@ -43,12 +43,6 @@ export class RAGSystem {
         const embeddingBlob = new Uint8Array(embedding.buffer);
         stmt.execute([chunk, tokenText, embeddingBlob]);
         
-        const id = this.db.prepare("SELECT last_insert_rowid() as id").get().id;
-        
-        this.db.prepare(`
-          INSERT INTO documents_vss (rowid, embedding, id, content)
-          VALUES (?, ?, ?, ?)
-        `).execute([id, embeddingBlob, id, chunk]);
         
         if (i % 10 === 0) {
           console.log(`Processed ${i + 1}/${chunks.length} chunks`);
@@ -68,16 +62,29 @@ export class RAGSystem {
     const tokens = await this.textProcessor.tokenize(query);
     const tokenText = tokens.join(" ");
     
-    const embedding = await this.embeddingGenerator.generateEmbedding(tokenText);
-    const embeddingBlob = new Uint8Array(embedding.buffer);
+    const queryEmbedding = await this.embeddingGenerator.generateEmbedding(tokenText);
     
-    const results = this.db.prepare(`
-      SELECT d.id, d.content, vss_distance(d.embedding, ?) as distance
-      FROM documents d
-      ORDER BY distance ASC
-      LIMIT ?
-    `).all([embeddingBlob, limit]);
+    const documents = this.db.prepare(`
+      SELECT id, content, embedding
+      FROM documents
+    `).all();
     
-    return results;
+    const { cosineSimilarity } = await import("./vector_utils.ts");
+    
+    const results = documents.map((doc) => {
+      const embeddingData = doc.embedding;
+      const docEmbedding = new Float32Array(embeddingData.buffer);
+      
+      const similarity = cosineSimilarity(queryEmbedding, docEmbedding);
+      
+      return {
+        id: doc.id,
+        content: doc.content,
+        distance: 1 - similarity, // 距離に変換（0が最も近い）
+      };
+    });
+    
+    results.sort((a, b) => a.distance - b.distance);
+    return results.slice(0, limit);
   }
 }
