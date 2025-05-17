@@ -41,7 +41,7 @@ export class RAGSystem {
         `);
         
         const embeddingBlob = new Uint8Array(embedding.buffer);
-        stmt.execute([chunk, tokenText, embeddingBlob]);
+        stmt.run([chunk, tokenText, embeddingBlob]);
         
         
         if (i % 10 === 0) {
