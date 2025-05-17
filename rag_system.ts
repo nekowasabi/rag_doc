@@ -24,7 +24,7 @@ export class RAGSystem {
     const chunks = await this.fileProcessor.splitTextIntoChunks(text);
     console.log(`Split into ${chunks.length} chunks`);
     
-    this.db.query("BEGIN TRANSACTION");
+    this.db.exec("BEGIN TRANSACTION");
     
     try {
       for (let i = 0; i < chunks.length; i++) {
@@ -49,10 +49,10 @@ export class RAGSystem {
         }
       }
       
-      this.db.query("COMMIT");
+      this.db.exec("COMMIT");
       console.log("Indexing completed successfully");
     } catch (error) {
-      this.db.query("ROLLBACK");
+      this.db.exec("ROLLBACK");
       console.error("Error during indexing:", error);
       throw error;
     }
