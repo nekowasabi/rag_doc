@@ -24,7 +24,7 @@ export class RAGSystem {
     const chunks = await this.fileProcessor.splitTextIntoChunks(text);
     console.log(`Split into ${chunks.length} chunks`);
     
-    this.db.execute("BEGIN TRANSACTION");
+    this.db.exec("BEGIN TRANSACTION");
     
     try {
       for (let i = 0; i < chunks.length; i++) {
@@ -41,17 +41,17 @@ export class RAGSystem {
         `);
         
         const embeddingBlob = new Uint8Array(embedding.buffer);
-        stmt.execute([chunk, tokenText, embeddingBlob]);
+        stmt.run([chunk, tokenText, embeddingBlob]);
         
         if (i % 10 === 0) {
           console.log(`Processed ${i + 1}/${chunks.length} chunks`);
         }
       }
       
-      this.db.execute("COMMIT");
+      this.db.exec("COMMIT");
       console.log("Indexing completed successfully");
     } catch (error) {
-      this.db.execute("ROLLBACK");
+      this.db.exec("ROLLBACK");
       console.error("Error during indexing:", error);
       throw error;
     }

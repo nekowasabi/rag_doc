@@ -3,7 +3,7 @@ import { Database } from "./deps.ts";
 export async function initDatabase(dbPath: string): Promise<Database> {
   const db = new Database(dbPath);
   
-  db.execute(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS documents (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       content TEXT NOT NULL,
